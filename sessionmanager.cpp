@@ -9,7 +9,7 @@
 #include "poller.h"
 
 session_manager::session_manager(const std::string &id)
-	: _id(id), _poller(nullptr) 
+	: _id(id), _poller(nullptr), _protocollist(8096, 1024*10240)
 {
 }
 
@@ -68,14 +68,14 @@ bool session_manager::del_session(unsigned int id)
 bool session_manager::add_protocol(unsigned int sid, protocol* p)
 {
 	//std::lock_guard<std::mutex> lock(_protocolmutex);
-	if (_protocollist.size() > 10485760/*1024*1024*/)
+	if (_protocollist.full())
 	{
 		std::cout << "manager:" << _id << " have too much protocol waiting to process" << std::endl;
 		return false;
 	}
 
 	protocol_wrap w{sid, p};
-	_protocollist.push_back(w);
+	_protocollist.push(w);
 
 	return true;
 }
@@ -88,10 +88,9 @@ bool session_manager::process_protocol()
 		//std::lock_guard<std::mutex> lock(_protocolmutex);
 		if (!_protocollist.empty())
 		{
-			auto a = _protocollist.back();
+			auto a = _protocollist.pop();
 			sid = a.sid;
 			p = a.p;
-			_protocollist.pop_back();
 		}
 	}
 

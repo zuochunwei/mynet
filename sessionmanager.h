@@ -6,6 +6,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include "protocol.h"
+#include "fifo.h"
 
 class poller;
 class session;
@@ -48,7 +49,7 @@ private:
 
 	std::string _id;							//identity
 	poller *_poller;							//associate poller
-	std::vector<protocol_wrap> _protocollist;
+	fifo<protocol_wrap> _protocollist;
 	std::mutex _protocolmutex;
 	std::map<unsigned, session*> _sessionmap;	//session id -> session*
 	std::mutex _sessionmutex;
