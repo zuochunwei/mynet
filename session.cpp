@@ -48,8 +48,6 @@ bool session::del_from_manager()
 
 int session::poll_in()
 {
-	//unsigned long long begin_tm = current_time();
-	//int fd = _socket->get_fd();
 	unsigned int len = 0; 
 	int n = 0, sum = 0;
 
@@ -98,19 +96,13 @@ int session::poll_in()
 		}
 	}
 
-	//std::cout << "pollin " << sum << " bytes data from session:" << _id << ", socket:" << fd << "." << std::endl;
-	//std::cout << "session " << _id << " recv spent " << current_time() - begin_tm << std::endl;
-	
-	//begin_tm = current_time();
 	on_poll_in();
-	//std::cout << "session " << _id << " on_poll_in() spent " << current_time() - begin_tm << std::endl;
 
 	return sum;
 }
 
 int session::poll_out()
 {
-	//int fd = _socket->get_fd();
 	unsigned int len = 0; 
 	int n = 0, sum = 0;
 
@@ -156,8 +148,6 @@ int session::poll_out()
 		}
 	}
 
-	//std::cout << "pollout " << sum << " bytes data at session:" << _id << ", socket:" << fd << "." << std::endl;
-
 	on_poll_out();
 
 	return sum;
@@ -165,20 +155,16 @@ int session::poll_out()
 
 void session::on_poll_in()
 {
-	unsigned int count = 0;
 	while (protocol* p = decode())
 	{
 		_manager->add_protocol(_id, p);
 		_socket->permit_read();
-		++count;
 	}
 
 	if (_ibuf.available_max() == 0)
 	{
 		_socket->forbid_read();
 	}
-
-	//std::cout << "session " << _id << " recv " << count << " protocols" << std::endl;
 }
 
 void session::on_poll_out()
@@ -191,7 +177,9 @@ bool session::send(const protocol* p)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
 		data_stream ds(&_obuf);
-		data_buffer db(512*1024);
+
+		static thread_local data_buffer db(512*1024);
+		db.clear();
 		data_stream tmp(&db);
 
 		tmp << p->get_type() << *p;

@@ -18,19 +18,18 @@ public:
 	bool full() const;
 	bool empty() const;
 private:
-	void reserve(unsigned int n);
+	void reserve(unsigned int size);
 
 	T *_elements;
 	unsigned int _size, _size_max;
 	unsigned int _in, _out;
 };
 
-static unsigned int upper_of_power(unsigned int& size)
+static void roundup_power_2(unsigned int& size)
 {
 	unsigned int n = 2;
 	while (n < size) n *= 2;
 	size = n;
-	return n;
 }
 
 template <typename T>
@@ -44,8 +43,10 @@ fifo<T>::fifo(unsigned int size, unsigned int size_max)
 	: _elements(nullptr), _size(size), _size_max(size_max), _in(0), _out(0)
 {
 	assert(size <= size_max);
-	upper_of_power(_size);
-	upper_of_power(_size_max);
+	if (size & (size - 1))
+		roundup_power_2(_size);
+	if (size_max & (size_max - 1))
+		roundup_power_2(_size_max);
 	_elements = new T[_size];
 }
 
@@ -97,7 +98,9 @@ void fifo<T>::push(const T& t)
 template <typename T>
 T& fifo<T>::pop()
 {
-	return _elements[_out++ % _size];
+	T& t = _elements[_out++ % _size];
+	if (_out == _in) _in = _out = 0;
+	return t;
 }
 
 template <typename T>
@@ -113,13 +116,13 @@ bool fifo<T>::empty() const
 }
 
 template <typename T>
-void fifo<T>::reserve(unsigned int n) 
+void fifo<T>::reserve(unsigned int size) 
 {
-	if (_size < n)
+	if (_size < size)
 	{
-		assert(n <= _size_max);
+		assert(size <= _size_max);
 		unsigned int sz = _size;
-		while (sz < n) sz *= 2;
+		while (sz < size) sz *= 2;
 
 		/*fifo<T> copy(*this);
 		delete [] _elements;

@@ -2,14 +2,6 @@
 
 #include <sys/time.h>
 
-inline unsigned long long current_time()
-{
-	struct timeval tv;
-	gettimeofday(&tv, nullptr);
-	unsigned long long l = tv.tv_sec * 1000000 + tv.tv_usec;
-	return l;
-}
-
 class data_stream;
 
 class protocol

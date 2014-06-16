@@ -1,6 +1,7 @@
 #pragma once
 
 #include "protocol.h"
+#include "cachedobject.h"
 
 enum
 {
@@ -14,7 +15,7 @@ enum
 	PROTOCOL_TYPE_USERLIST,
 };
 
-class protocol_echo : public protocol
+class protocol_echo : public protocol, public cached_object<protocol_echo>
 {
 public:
 	protocol_echo() : protocol(PROTOCOL_TYPE_ECHO), _content() {}

@@ -8,6 +8,14 @@
 #include "net.h"
 #include "protocolheader.h"
 
+inline unsigned long long current_time()
+{
+	struct timeval tv;
+	gettimeofday(&tv, nullptr);
+	unsigned long long l = tv.tv_sec * 1000000 + tv.tv_usec;
+	return l;
+}
+
 unsigned long long count[10];
 unsigned long long count_prev[10];
 unsigned long long total(0);

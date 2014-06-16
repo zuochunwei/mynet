@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <netinet/in.h>
@@ -47,10 +47,10 @@ private:
 		protocol *p;
 	};
 
-	std::string _id;							//identity
-	poller *_poller;							//associate poller
+	std::string _id; //identity
+	poller *_poller; //associate poller
 	fifo<protocol_wrap> _protocollist;
 	std::mutex _protocolmutex;
-	std::map<unsigned, session*> _sessionmap;	//session id -> session*
+	std::unordered_map<unsigned, session*> _sessionmap;	//session id -> session*
 	std::mutex _sessionmutex;
 };
