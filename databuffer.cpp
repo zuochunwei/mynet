@@ -23,39 +23,42 @@ data_buffer::data_buffer(unsigned int size, unsigned int size_max)
 		roundup_power_2(size);
 	if (size_max & (size_max - 1))
 		roundup_power_2(size_max);
-	_buf = new unsigned char[size];
+	_buf = new byte_t[size];
 }
 
 data_buffer::data_buffer(const data_buffer& rhs)
 	: _buf(nullptr), _size(rhs._size), _size_max(rhs._size_max), _in(rhs._in), _out(rhs._out)
 {
-	_buf = new unsigned char[_size];
+	_buf = new byte_t[_size];
 	memcpy(_buf, rhs._buf, _size);
 }
 
 data_buffer& data_buffer::operator= (const data_buffer& rhs)
 {
-	if (_size < rhs.length())
+	unsigned int len = rhs.length();
+	if (_size_max < len)
+		assert(false);
+	
+	if (_size < len)
 	{
 		delete [] _buf;
-		_buf = new unsigned char[rhs._size];
 		_size = rhs._size;
-		_size_max = rhs._size_max;
+		_buf = new byte_t[_size];
 	}
-	
+
 	data_buffer copy(rhs);	//for rhs is const ref
 
-	unsigned int len1 = 0, len2 = 0;
-	void *buf = copy.get_data_buf(len1);
-	memcpy(_buf, buf, len1);
-	copy.on_get(len1);
+	_in = _out = 0;
+	unsigned int l = 0;
+	void *buf = copy.get_data_buf(l);
+	put(buf, l);
 
-	buf = copy.get_data_buf(len2);
-	memcpy(_buf + len1, buf, len2);
-	copy.on_get(len2);
+	copy.on_get(l);
 
-	_out = 0;
-	_in = len1 + len2;
+	buf = copy.get_data_buf(l);
+	put(buf, l);
+
+	assert(len = length());
 
 	return *this;
 }
@@ -96,7 +99,7 @@ unsigned int data_buffer::get(void* dst, unsigned int len)
 	len = std::min(len, length());
 	unsigned int n = std::min(len, _size - (_out & (_size - 1)));
 	memcpy(dst, _buf + (_out & (_size - 1)), n);
-	memcpy((char*)dst + n, _buf, len - n);
+	memcpy((byte_t*)dst + n, _buf, len - n);
 	_out += len;
 	if (_out == _in) _out = _in = 0;
 	return len;
@@ -106,19 +109,19 @@ bool data_buffer::reserve(unsigned int size)
 {
 	if (_size < size)
 	{
-		unsigned int s = _size;
-		while (s < size && s < _size_max)
-			s *= 2;
-		unsigned char* buf = new unsigned char[s];
-		unsigned int l = length();
-		get(buf, l);
-		_in = l;
-		_out = 0;
-		_size = s;
+		assert(size <= _size_max);
+		unsigned int sz = _size;
+		while (sz < size) sz *= 2;
+
+		unsigned int len = length();
+		byte_t* buf = new byte_t[sz];
+		get(buf, len);
+
 		delete [] _buf;
 		_buf = buf;
-
-		return s >= size;
+		_size = sz;
+		_in = len;
+		_out = 0;
 	}
 	return true;
 }
