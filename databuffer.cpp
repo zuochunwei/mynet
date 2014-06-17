@@ -58,7 +58,7 @@ data_buffer& data_buffer::operator= (const data_buffer& rhs)
 	buf = copy.get_data_buf(l);
 	put(buf, l);
 
-	assert(len = length());
+	assert(len == length());
 
 	return *this;
 }
