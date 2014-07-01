@@ -5,7 +5,7 @@
 #include "session.h"
 #include "protocol.h"
 #include "socketcmd.h"
-#include "socketio.h"
+#include "socketconnection.h"
 #include "poller.h"
 
 session_manager::session_manager(const std::string &id)
@@ -63,6 +63,16 @@ bool session_manager::del_session(unsigned int id)
 		return true;
 	}
 	return false;
+}
+
+void session_manager::listen_failed()
+{
+	on_listen_failed();
+}
+
+void session_manager::connect_failed()
+{
+	on_connect_failed();
 }
 
 bool session_manager::add_protocol(unsigned int sid, protocol* p)

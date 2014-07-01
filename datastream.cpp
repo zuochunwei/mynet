@@ -1,4 +1,5 @@
 #include <string.h>
+#include <arpa/inet.h>
 #include "datastream.h"
 #include "protocol.h"
 
@@ -52,42 +53,96 @@ data_stream& data_stream::push(const void* from, unsigned int len)
 
 data_stream& data_stream::operator<< (int data)
 {
-	return push(&data, sizeof(data));
+	data = htonl(data);
+	push(&data, sizeof(data));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (unsigned int data)
 {
-	return push(&data, sizeof(data));
+	data = htonl(data);
+	push(&data, sizeof(data));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (short data)
 {
-	return push(&data, sizeof(data));
+	data = htons(data);
+	push(&data, sizeof(data));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (unsigned short data)
 {
-	return push(&data, sizeof(data));
+	data = htons(data);
+	push(&data, sizeof(data));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (long data)
 {
-	return push(&data, sizeof(data));
+	union 
+	{
+		long l;
+		unsigned int i[2];
+	} i, o;
+
+	i.l = data;
+	o.i[0] = htonl(i.i[1]);
+	o.i[1] = htonl(i.i[0]);
+
+	push(&o.l, sizeof(o.l));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (unsigned long data)
 {
-	return push(&data, sizeof(data));
+	union 
+	{
+		unsigned long l;
+		unsigned int i[2];
+	} i, o;
+
+	i.l = data;
+	o.i[0] = htonl(i.i[1]);
+	o.i[1] = htonl(i.i[0]);
+
+	push(&o.l, sizeof(o.l));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (long long data)
 {
-	return push(&data, sizeof(data));
+	static_assert(sizeof(long long) == sizeof(long), "data_stream data length error");
+	union 
+	{
+		long l;
+		unsigned int i[2];
+	} i, o;
+
+	i.l = data;
+	o.i[0] = htonl(i.i[1]);
+	o.i[1] = htonl(i.i[0]);
+
+	push(&o.l, sizeof(o.l));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (unsigned long long data)
 {
-	return push(&data, sizeof(data));
+	static_assert(sizeof(unsigned long long) == sizeof(unsigned long), "data_stream data length error");
+	union 
+	{
+		unsigned long l;
+		unsigned int i[2];
+	} i, o;
+
+	i.l = data;
+	o.i[0] = htonl(i.i[1]);
+	o.i[1] = htonl(i.i[0]);
+
+	push(&o.l, sizeof(o.l));
+	return *this;
 }
 
 data_stream& data_stream::operator<< (const protocol& data)
@@ -117,42 +172,96 @@ data_stream& data_stream::operator<< (const data_stream& data)
 
 data_stream& data_stream::operator>> (int& data)
 {
-	return pop(&data, sizeof(data));
+	pop(&data, sizeof(data));
+	data = ntohl(data);
+	return *this;
 }
 
 data_stream& data_stream::operator>> (unsigned int& data)
 {
-	return pop(&data, sizeof(data));
+	pop(&data, sizeof(data));
+	data = ntohl(data);
+	return *this;
 }
 
 data_stream& data_stream::operator>> (short& data)
 {
-	return pop(&data, sizeof(data));
+	pop(&data, sizeof(data));
+	data = ntohs(data);
+	return *this;
 }
 
 data_stream& data_stream::operator>> (unsigned short& data)
 {
-	return pop(&data, sizeof(data));
+	pop(&data, sizeof(data));
+	data = ntohs(data);
+	return *this;
 }
 
 data_stream& data_stream::operator>> (long& data)
 {
-	return pop(&data, sizeof(data));
+	union 
+	{
+		long l;
+		unsigned int i[2];
+	} i, o;
+
+	pop(&i.l, sizeof(i.l));
+	o.i[0] = ntohl(i.i[1]);
+	o.i[1] = ntohl(i.i[0]);
+
+	data = o.l;
+	return *this;
 }
 
 data_stream& data_stream::operator>> (unsigned long& data)
 {
-	return pop(&data, sizeof(data));
+	union 
+	{
+		unsigned long l;
+		unsigned int i[2];
+	} i, o;
+
+	pop(&i.l, sizeof(i.l));
+	o.i[0] = ntohl(i.i[1]);
+	o.i[1] = ntohl(i.i[0]);
+
+	data = o.l;
+	return *this;
 }
 
 data_stream& data_stream::operator>> (long long& data)
 {
-	return pop(&data, sizeof(data));
+	static_assert(sizeof(long long) == sizeof(long), "data_stream data length error");
+	union 
+	{
+		long l;
+		unsigned int i[2];
+	} i, o;
+
+	pop(&i.l, sizeof(i.l));
+	o.i[0] = ntohl(i.i[1]);
+	o.i[1] = ntohl(i.i[0]);
+
+	data = o.l;
+	return *this;
 }
 
 data_stream& data_stream::operator>> (unsigned long long& data)
 {
-	return pop(&data, sizeof(data));
+	static_assert(sizeof(unsigned long long) == sizeof(unsigned long), "data_stream data length error");
+	union 
+	{
+		unsigned long l;
+		unsigned int i[2];
+	} i, o;
+
+	pop(&i.l, sizeof(i.l));
+	o.i[0] = ntohl(i.i[1]);
+	o.i[1] = ntohl(i.i[0]);
+
+	data = o.l;
+	return *this;
 }
 
 data_stream& data_stream::operator>> (protocol& p)

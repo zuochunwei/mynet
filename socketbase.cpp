@@ -22,12 +22,7 @@ socket_base::socket_base()
 
 socket_base::~socket_base()
 {
-	if (_fd != -1)
-	{
-		while (::close(_fd) == -1 && errno == EINTR)
-			;
-		_fd = -1;
-	}
+	close_socket();
 }
 
 int socket_base::poll_close()
@@ -70,6 +65,18 @@ bool socket_base::create_socket()
 		return false;
 	}
 	return true;
+}
+
+bool socket_base::close_socket()
+{
+	if (_fd != -1)
+	{
+		while (::close(_fd) == -1 && errno == EINTR)
+			;
+		_fd = -1;
+		return true;
+	}
+	return false;
 }
 
 void socket_base::set_close(int error)

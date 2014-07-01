@@ -19,6 +19,7 @@ public:
 	void close();
 	bool poll(int timeout);
 	bool send_cmd(const socket_cmd&) const;
+	bool test_add() const { return _maxevents > (int)_sockmap.size(); }
 	bool add(socket_base*, bool permit_read, bool permit_write);
 	bool del(socket_base*);
 	bool ctrl(int opt, int fd, unsigned int event, void* ptr);

@@ -48,6 +48,7 @@ public:
 	void permit_read();
 
 	bool create_socket();
+	bool close_socket();
 	
 	void set_close(int error);
 	void set_address(const sockaddr_in& addr) { _addr = addr; }

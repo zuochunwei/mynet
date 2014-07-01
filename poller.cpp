@@ -8,7 +8,7 @@
 #include "session.h"
 #include "socketserver.h"
 #include "socketclient.h"
-#include "socketio.h"
+#include "socketconnection.h"
 #include "sessionmanager.h"
 
 bool poller::init()
@@ -18,9 +18,8 @@ bool poller::init()
 }
 
 poller::poller()
-	: _epfd(-1), _pipe(),  _maxevents(0), _events()
+	: _epfd(-1), _pipe{-1,-1},  _maxevents(0), _events()
 {
-	_pipe[0] = _pipe[1] = -1;
 }
 
 poller::~poller()
@@ -285,6 +284,7 @@ bool poller::cmd_listen(const socket_cmd::listen_param& p)
 	if (!ss->create_socket())
 	{
 		delete ss;
+		p.manager->listen_failed();
 		return false;
 	}
 
@@ -297,6 +297,7 @@ bool poller::cmd_listen(const socket_cmd::listen_param& p)
 	{
 		std::cout << "cmd_listen failed" << std::endl;
 		delete ss;
+		p.manager->listen_failed();
 		return false;
 	}
 
@@ -313,6 +314,7 @@ bool poller::cmd_connect(const socket_cmd::connect_param& p)
 	if (!sc->create_socket())
 	{
 		delete sc;
+		p.manager->connect_failed();
 		return false;
 	}
 
@@ -324,6 +326,7 @@ bool poller::cmd_connect(const socket_cmd::connect_param& p)
 	{
 		std::cout << "cmd_connect failed" << std::endl;
 		delete sc;
+		p.manager->connect_failed();
 		return false;
 	}
 

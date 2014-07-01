@@ -89,7 +89,7 @@ unsigned int data_buffer::put(const void* data, unsigned int len)
 	len = std::min(len, _size - length());
 	unsigned int n = std::min(len, _size - (_in & (_size - 1)));
 	memcpy(_buf + (_in & (_size - 1)), data, n);
-	memcpy(_buf, (const char*)data + n, len - n);
+	memcpy(_buf, (const byte_t*)data + n, len - n);
 	_in += len;
 	return len;
 }

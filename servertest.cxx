@@ -1,10 +1,12 @@
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <unistd.h>
 #include <time.h>
 #include <string.h>
+#include <pthread.h>
 #include "net.h"
 #include "protocolheader.h"
 
@@ -19,6 +21,8 @@ inline unsigned long long current_time()
 unsigned long long count[10];
 unsigned long long count_prev[10];
 unsigned long long total(0);
+
+bool loop = true;
 
 int threadnum;
 int connectnum;
@@ -41,15 +45,21 @@ struct thread_wrap
 		launch_server(p, m, "127.0.0.1", 10000+id);
 	}
 
-	void operator() ()
-	{
+	void operator()()
+	{ 
 		std::cout << "thread " << id << " start..." << std::endl;
-		while (true)
+		while (loop)
 		{
 			p->poll(0);
 			while (m->process_protocol())
 				++count[id-1];
 		}
+
+		p->close();
+		delete p;
+		delete m;
+
+		std::cout << "thread " << id << " term" << std::endl;
 	}
 };
 
@@ -67,19 +77,20 @@ int main(int argc, char* argv[])
 
 	net_init();
 
+	std::thread** threads = new std::thread*[threadnum]();
 	for (int i = 0; i < threadnum; ++i)
 	{
-		thread_wrap* w = new thread_wrap(i+1);
-		new std::thread(*w);
+		threads[i] = new std::thread(thread_wrap(i+1));
 	}
 
-	while (true)
+	while (loop)
 	{
 		total = 0;
 
 		unsigned long long tm = current_time();
 		sleep(10);
 		unsigned long long diff_tm = (current_time() - tm) / 1000000;
+
 		for (int i = 0; i < threadnum; ++i)
 		{
 			unsigned long long diff = count[i] - count_prev[i];
@@ -89,7 +100,25 @@ int main(int argc, char* argv[])
 		}
 
 		std::cout << "total speed:" << total / diff_tm << std::endl;
+
+		std::fstream f;
+		f.open("breakloop");
+		if (f.is_open())
+		{
+			f.close();
+			loop = false;
+			std::cout << "break loop" << std::endl;
+		}
 	}
+
+	for (int i = 0; i < threadnum; ++i)
+	{
+		threads[i]->join();
+		delete threads[i];
+		threads[i] = nullptr;
+	}
+	delete [] threads;
+	threads = nullptr;
 
 	net_term();
 

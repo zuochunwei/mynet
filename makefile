@@ -4,8 +4,11 @@ OBJ_FILES := $(patsubst %.cpp, %.o, $(SRC_FILES))
 CXX = g++
 LD = g++
 
+#CXXFLAGS = -c -std=c++11 -Wall -g -ggdb -O3 -pthread -static-libstdc++
+#LDFLAGS = -pthread -static-libstdc++
 CXXFLAGS = -c -std=c++11 -Wall -g -ggdb -O3 -pthread
-LDFLAGS = -pthread -lrt -lssl
+LDFLAGS = -pthread
+
 DEF =
 
 %.o : %.cpp

@@ -22,9 +22,15 @@ public:
 	virtual void on_add_session(unsigned int sid) {}
 	virtual void on_del_session(unsigned int sid) {}
 
+	virtual void on_listen_failed() {}
+	virtual void on_connect_failed() {}
+
 	bool add_session(session* s);
 	bool del_session(session* s);
 	bool del_session(unsigned int sid);
+
+	void listen_failed();
+	void connect_failed();
 
 	bool add_protocol(unsigned int sid, protocol*);
 	bool process_protocol();

@@ -41,10 +41,9 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < connectnum; ++i)
 	{
 		launch_client(p, m, "127.0.0.1", port);
-		usleep(100);
-
+		usleep(5000);
 		p->poll(0);
-		while (m->process_protocol())
+		while (m->process_protocol()) 
 			;
 	}
 
@@ -52,10 +51,8 @@ int main(int argc, char* argv[])
 
 	protocol_echo e;
 	for (int i = 0; i < connectnum; ++i)
-	{
-		for (int j = 0; j < 500; ++j)
+		for (int j = 0; j < 1; ++j)
 			m->send(i+1, e);
-	}
 
 	while (true)
 	{
@@ -63,6 +60,10 @@ int main(int argc, char* argv[])
 		while (m->process_protocol())
 			;
 	}
+
+	p->close();
+	delete p;
+	delete m;
 
 	net_term();
 

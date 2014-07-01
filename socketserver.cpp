@@ -1,10 +1,11 @@
 #include <string.h>
 #include <iostream>
 #include <errno.h>
+#include <unistd.h>
 #include <assert.h>
 #include <sys/epoll.h>
 #include "socketserver.h"
-#include "socketio.h"
+#include "socketconnection.h"
 #include "session.h"
 #include "poller.h"
 #include "sessionmanager.h"
@@ -20,16 +21,23 @@ int socket_server::poll_in()
 	int newfd = accept(&addr);
 	if (newfd > 0)
 	{
-		socket_io* sio = new socket_io;
-		sio->set_fd(newfd);
-		sio->set_address(addr);
-		sio->set_non_block();
-		sio->set_keep_alive();
+		if (!_poller->test_add())
+		{
+			while (::close(newfd) == -1 && errno == EINTR)
+				;
+			return 0;
+		}
 
-		bool b = _poller->add(sio, true, true);
-		sio->set_poller(_poller);
+		socket_connection* conn = new socket_connection;
+		conn->set_fd(newfd);
+		conn->set_address(addr);
+		conn->set_non_block();
+		conn->set_keep_alive();
+
+		bool b = _poller->add(conn, true, true);
+		conn->set_poller(_poller);
 		assert(b);
-		b = sio->get_session()->add_to_manager(_manager);
+		b = conn->get_session()->add_to_manager(_manager);
 		assert(b);
 		return newfd;
 	}

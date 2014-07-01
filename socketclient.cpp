@@ -4,7 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include "socketclient.h"
-#include "socketio.h"
+#include "socketconnection.h"
 #include "session.h"
 #include "sessionmanager.h"
 #include "poller.h"
@@ -16,30 +16,33 @@ socket_client::socket_client(session_manager *m)
 
 socket_client::~socket_client()
 {
-	if (get_opt_int(SO_ERROR))
+	if (_close)
 	{
-		_error = error_connect_failed;
-		std::cout << "socket_client connect failed, reason" << strerror(errno) << std::endl;
-	}
-	else
-	{
-		int newfd = dup(_fd);
+		if (get_opt_int(SO_ERROR))
+		{
+			_error = error_connect_failed;
+			std::cout << "socket_client connect failed, reason" << strerror(errno) << std::endl;
+		}
+		else
+		{
+			int newfd = dup(_fd);
 
-		sockaddr_in addr;
-		socklen_t len = sizeof(addr);
-		getpeername(newfd, (sockaddr*)&addr, &len);
+			sockaddr_in addr;
+			socklen_t len = sizeof(addr);
+			getpeername(newfd, (sockaddr*)&addr, &len);
 
-		socket_io* sio = new socket_io;
-		sio->set_fd(newfd);
-		sio->set_address(addr);
-		sio->set_non_block();
-		sio->set_keep_alive();
+			socket_connection* conn = new socket_connection;
+			conn->set_fd(newfd);
+			conn->set_address(addr);
+			conn->set_non_block();
+			conn->set_keep_alive();
 
-		bool b = _poller->add(sio, true, true);
-		assert(b);
-		sio->set_poller(_poller);
-		b = sio->get_session()->add_to_manager(_manager);
-		assert(b);
+			bool b = _poller->add(conn, true, true);
+			conn->set_poller(_poller);
+			assert(b);
+			b = conn->get_session()->add_to_manager(_manager);
+			assert(b);
+		}
 	}
 }
 

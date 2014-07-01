@@ -49,8 +49,6 @@ bool session::del_from_manager()
 int session::poll_in()
 {
 	unsigned int len = 0; 
-	int n = 0, sum = 0;
-
 	void* buf = _ibuf.get_free_buf(len);
 	if (len == 0)
 	{
@@ -59,7 +57,7 @@ int session::poll_in()
 		return -1;
 	}
 
-	n = _socket->read(buf, len);
+	int n = _socket->read(buf, len);
 	if (n == 0)
 	{
 		_socket->set_close(error_peer_closed);
@@ -72,6 +70,7 @@ int session::poll_in()
 		return -1;
 	}
 
+	int sum = 0;
 	sum += n;
 	_ibuf.on_put(n);
 
